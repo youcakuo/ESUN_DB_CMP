@@ -1,5 +1,5 @@
-baseFile = 'DDLNBSDB_DBU1_UAT.TXT'
-targetFile = 'DDLNBSDB_DBP1.TXT'
+import datetime
+import argparse
 
 def validateCmd(cmd, target):
     isFind = False
@@ -24,14 +24,27 @@ def validateCmd(cmd, target):
                 cmdTarget.extend([t for t in tmp if t])
     return rst
 
+def logResult(results, more=False, logFile='result'):
+    logFile = logFile + '_' + datetime.datetime.now().strftime("%Y%m%d%H%M") + '.txt'
+    resultToLog = ['Not found', 'Not match']
+    if more:
+        resultToLog.append('pass')
+    with open(logFile, 'a') as file:
+        for rl in resultToLog:
+            file.write(rl + ':\n')
+            for r in results:
+                if r[1]==rl:
+                    file.write(r[0])
+            file.write('\n')
 
-def main():
+def main(baseFile, targetFile, more):
     with open(baseFile, 'r', encoding='utf-8') as fb, open(targetFile, 'r', encoding='utf-8') as ft:
         fb_content = fb.readlines()
         ft_content = ft.readlines()
 
         processCmd = False
         cmdBase = []
+        results = []
         for lineb in fb_content:
             baseStr = str(lineb)
             if baseStr.lstrip().startswith('CREATE TABLE '):
@@ -40,14 +53,39 @@ def main():
                 processCmd = False
                 check = validateCmd(cmdBase, ft_content)
                 if not check:
-                    print(cmdBase[2], 'pass')
+                    print(cmdBase[2].rstrip(), ': pass')
+                    results.append((cmdBase[2], 'pass'))
                 else:
-                    print(cmdBase[2], check)
+                    print(cmdBase[2].rstrip(), ':', check)
+                    results.append((cmdBase[2], check))
                 cmdBase = []
             if processCmd:
                 tmp = lineb.split(' ')
                 cmdBase.extend([b for b in tmp if b])
+        logResult(results, more=more)
+
+def debugInfo(info, logLen = 50):
+    rst = ''
+    if not info:
+        rst = '-'*logLen
+    else:
+        rst = info + ' '*(int(logLen)-len(info))
+    return '|' + rst + '|'
+
 
 if __name__ =='__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-b', '--base', help='比對基礎檔案名稱')
+    parser.add_argument('-t', '--target', help='比對目標檔案名稱')
+    parser.add_argument('-m', '--more', help='log包含正確比對', action='store_true')
+    args = parser.parse_args()
+
+    baseFile = args.base if args.base else 'DDLNBSDB_DBU1_UAT.TXT'
+    targetFile = args.target if args.target else 'DDLNBSDB_DBP1.TXT'
+    print(debugInfo(''))
+    print(debugInfo('baseFile   : ' + baseFile))
+    print(debugInfo('targetFile : ' + targetFile))
+    print(debugInfo('more       : ' + str(args.more)))
+    print(debugInfo('')+'\n')
+    main(baseFile, targetFile, args.more)
 
