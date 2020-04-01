@@ -38,7 +38,7 @@ def logResult(results, more=False, logFile='result'):
             file.write('\n')
 
 def main(baseFile='DDLNBSDB_DBU1_UAT.TXT', targetFile='DDLNBSDB_DBP1.TXT', more=False):
-    with open(baseFile, 'r', encoding='utf-8') as fb, open(targetFile, 'r', encoding='utf-8') as ft:
+    with open(baseFile, 'r', encoding='big5') as fb, open(targetFile, 'r', encoding='big5') as ft:
         fb_content = fb.readlines()
         ft_content = ft.readlines()
 
